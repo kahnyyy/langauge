@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secret Language</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f9;
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #333;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: white;
+      padding: 2rem;
+      border-radius: 1rem;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    }
+
+    textarea {
+      width: 100%;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid #ccc;
+      margin-bottom: 1rem;
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      background-color: #4f46e5;
+      color: white;
+      border: none;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background-color: #3730a3;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin: 1rem 0 0.5rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>The Langauge</h1>
+  <div class="container">
+    <label for="english">Enter English:</label>
+    <textarea id="english" placeholder="Type your sentence..."></textarea>
+    <button onclick="translateToCustom()">Translate ➜</button>
+
+    <label for="custom">Custom Language Output:</label>
+    <textarea id="custom" placeholder="Translated text will appear here..."></textarea>
+    <button onclick="translateToEnglish()">⬅ Translate Back (have first box clear)</button>
+  </div>
+
+  <script>
+    const map = {};
+    const reverseMap = {};
+
+    // Create simple substitution map: a -> 1, b -> 2, ..., z -> 26, 0–9 and basic symbols
+    (() => {
+      const letters = 'abcdefghijklmnopqrstuvwxyz';
+      for (let i = 0; i < letters.length; i++) {
+        const val = String.fromCharCode(0x2460 + i); // ①, ②, ③...
+        map[letters[i]] = val;
+        reverseMap[val] = letters[i];
+      }
+
+      // Numbers 0–9
+      for (let i = 0; i <= 9; i++) {
+        map[i.toString()] = String.fromCharCode(0x2776 + i); // ❶, ❷...
+        reverseMap[String.fromCharCode(0x2776 + i)] = i.toString();
+      }
+
+      // Basic symbols
+      const symbols = '!@#$%^&*()_+-=[]{}|;:\'",.<>?/`~';
+      for (let sym of symbols) {
+        const code = '§' + sym.charCodeAt(0); // Unique encoding
+        map[sym] = code;
+        reverseMap[code] = sym;
+      }
+
+      // Spaces
+      map[' '] = '␣';
+      reverseMap['␣'] = ' ';
+    })();
+
+    function translateToCustom() {
+      const input = document.getElementById('english').value.toLowerCase();
+      let output = '';
+
+      for (let char of input) {
+        output += map[char] || char;
+      }
+
+      document.getElementById('custom').value = output;
+    }
+
+    function translateToEnglish() {
+      let input = document.getElementById('custom').value;
+      let output = '';
+
+      let i = 0;
+      while (i < input.length) {
+        const char = input[i];
+        let translated = null;
+
+        // Handle special symbol encoding
+        if (char === '§') {
+          let code = input.slice(i, i + 4); // e.g., §33
+          translated = reverseMap[code];
+          i += 4;
+        } else {
+          translated = reverseMap[char];
+          i++;
+        }
+
+        output += translated || char;
+      }
+
+      document.getElementById('english').value = output;
+    }
+  </script>
+</body>
+</html>
